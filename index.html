@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HOSKY GM CHAMPIONSHIP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/@meshsdk/core/dist/mesh.browser.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-left">
+      <img src="https://hosky.io/wp-content/uploads/2022/01/hosky-logo.png" alt="Hosky Logo" class="logo" onerror="this.style.display='none'; document.getElementById('nav-title').style.display='block';">
+      <h1 id="nav-title" style="display:none; color:white; font-weight:900;">HOSKY</h1>
+      <span class="nav-title-text">HOSKY GM CHAMPIONSHIP</span>
+    </div>
+    <div class="nav-right">
+      <button id="wallet-btn" class="btn-primary">Connect Wallet</button>
+      <div id="wallet-pill" class="wallet-pill" style="display: none;">🟢 stake1...4z9x</div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="hero-grid">
+      <div class="card stat-card"><span class="stat-label">Next Deadline</span><span id="countdown" class="stat-value">Loading...</span></div>
+      <div class="card stat-card"><span class="stat-label">Total Prize Pool</span><span id="prize-pool" class="stat-value">TBD</span></div>
+      <div class="card stat-card"><span class="stat-label">Active Managers</span><span id="manager-count" class="stat-value">-</span></div>
+      <div class="card stat-card"><span class="stat-label">Current Gameweek</span><span id="current-gw" class="stat-value">-</span></div>
+    </div>
+
+    <div class="main-grid">
+      <div class="left-col">
+        <div class="card">
+          <h2 class="card-title">Weekly Fixtures</h2>
+          <div id="fixtures-list" class="fixtures-list"></div>
+        </div>
+        <div class="card">
+          <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('classic')">Classic</button>
+            <button class="tab-btn" onclick="switchTab('h2h')">H2H</button>
+            <button class="tab-btn" onclick="switchTab('cup')">Cup</button>
+          </div>
+          <div id="standings-table" class="standings-table"></div>
+        </div>
+      </div>
+      <div class="right-col">
+        <div class="card"><h2 class="card-title">Prize Pool</h2><div id="prize-list" class="prize-list"></div></div>
+        <div class="card" id="dossier-card" style="display: none;"><h2 class="card-title">Manager Dossier</h2><div id="dossier-content"></div></div>
+        <div class="card" id="link-card"><h2 class="card-title">Link FPL Team</h2><input type="text" id="fpl-id-input" placeholder="Enter FPL Team ID..." disabled class="text-input"><p class="input-note">Connect Cardano Wallet to enable team linking.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer"><p>Powered by Fantasy Premier League | Built on Cardano</p></footer>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
