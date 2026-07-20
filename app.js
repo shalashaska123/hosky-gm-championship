@@ -21,9 +21,9 @@ const MOCK_MANAGER = {
   history: { current: [ { event: 35, points: 58 }, { event: 36, points: 71 }, { event: 37, points: 63 }, { event: 38, points: 74 } ] }
 };
 
-// Using api.allorigins.win which handles local file:// requests better
+// FIXED: Changed premierleague.net to premierleague.com
 const PROXY = 'https://api.allorigins.win/raw?url=';
-const BASE = 'https://fantasy.premierleague.net/api';
+const BASE = 'https://fantasy.premierleague.com/api';
 let teamsMap = {};
 
 async function fetchAPI(endpoint) {
@@ -166,12 +166,13 @@ function initWalletButton() {
   const fplInput = document.getElementById('fpl-id-input');
 
   btn.addEventListener('click', async () => {
-    if (typeof window.MeshSDK === 'undefined') { 
-      alert('MeshJS failed to load. Ensure you are hosting this on a live URL (like Cloudflare), not opening it locally.'); 
+    // FIXED: Changed window.MeshSDK to window.BrowserWallet
+    if (!window.BrowserWallet) { 
+      alert('MeshJS failed to load. Please refresh the page.'); 
       return; 
     }
     try {
-      const wallet = await window.MeshSDK.BrowserWallet.enable('eternl');
+      const wallet = await window.BrowserWallet.enable('eternl');
       const address = await wallet.getChangeAddress();
       const truncated = `${address.slice(0, 7)}...${address.slice(-4)}`;
       
