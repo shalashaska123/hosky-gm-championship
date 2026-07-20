@@ -1,35 +1,12 @@
-// --- RICH MOCK DATA ---
-const MOCK_CLASSIC = { 
-  standings: { results: [
-    { rank: 1, entry_name: "Hosky Hotshots", player_name: "stake1...a1b2", total: 2187, event_total: 74 },
-    { rank: 2, entry_name: "ADA United", player_name: "stake1...c3d4", total: 2104, event_total: 71 },
-    { rank: 3, entry_name: "Cardano City", player_name: "stake1...e5f6", total: 2065, event_total: 67 }
-  ]}
-};
-const MOCK_H2H = { 
-  standings: { results: [
-    { rank: 1, entry_name: "Hosky Hotshots", player_name: "stake1...a1b2", matches_won: 22, matches_drawn: 4, matches_lost: 12, points_for: 2187 }
-  ]}
-};
-const MOCK_FIXTURES = [
-  { home: "ARS", away: "MCI", kickoff: "Sat 12:30", status: "upcoming" },
-  { home: "MUN", away: "TOT", kickoff: "Sat 17:30", status: "live", home_score: 1, away_score: 1 }
-];
-const MOCK_MANAGER = {
-  entry_name: "Hosky Hotshots", summary_overall_rank: 142857,
-  last_deadline_bank: 15, last_deadline_total_transfers: 3, active_chips: ["wildcard"],
-  history: { current: [ { event: 35, points: 58 }, { event: 36, points: 71 }, { event: 37, points: 63 }, { event: 38, points: 74 } ] }
-};
-
-// FIXED: Changed premierleague.net to premierleague.com
-const PROXY = 'https://api.allorigins.win/raw?url=';
+// --- NO MORE MOCK DATA ---
+const PROXY = 'https://corsproxy.io/?url=';
 const BASE = 'https://fantasy.premierleague.com/api';
 let teamsMap = {};
 
 async function fetchAPI(endpoint) {
   try {
     const res = await fetch(PROXY + encodeURIComponent(BASE + endpoint));
-    if (!res.ok) throw new Error('Network response was not ok');
+    if (!res.ok) return null;
     return await res.json();
   } catch (e) {
     console.error("API Fetch Failed:", e);
@@ -66,17 +43,14 @@ async function fetchBootstrap() {
     const nextEvent = data.events.find(e => e.is_next) || data.events[data.events.length - 1];
     
     document.getElementById('current-gw').textContent = `GW ${nextEvent.id}`;
-    document.getElementById('manager-count').textContent = data.total_players ? `${(data.total_players / 1000000).toFixed(1)}M` : "5";
+    document.getElementById('manager-count').textContent = data.total_players ? `${(data.total_players / 1000000).toFixed(1)}M` : "-";
     startCountdown(nextEvent.deadline_time);
     fetchFixtures(nextEvent.id);
     fetchClassicStandings(CHAMPIONSHIP_CONFIG.leagueIds.classic);
   } else {
-    console.log("API not live, using rich mock data");
-    startCountdown(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString());
-    document.getElementById('current-gw').textContent = "GW 1";
-    document.getElementById('manager-count').textContent = "5";
-    renderFixtures(MOCK_FIXTURES);
-    renderClassicStandings(MOCK_CLASSIC.standings.results);
+    document.getElementById('countdown').textContent = "Error";
+    document.getElementById('current-gw').textContent = "Error";
+    document.getElementById('fixtures-list').innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">Unable to fetch FPL data.</div>`;
   }
 }
 
@@ -93,20 +67,20 @@ async function fetchFixtures(gw) {
     }));
     renderFixtures(formatted);
   } else {
-    renderFixtures(MOCK_FIXTURES);
+    document.getElementById('fixtures-list').innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">No fixtures available for this Gameweek yet.</div>`;
   }
 }
 
 async function fetchClassicStandings(id) {
   if (!id || id === "YOUR_LEAGUE_ID_HERE") { 
-    renderClassicStandings(MOCK_CLASSIC.standings.results); 
+    document.getElementById('standings-table').innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">Please set your League ID in config.js</div>`;
     return; 
   }
   const data = await fetchAPI(`/leagues-classic/${id}/standings/`);
   if (data && data.standings && data.standings.results.length > 0) {
     renderClassicStandings(data.standings.results);
   } else {
-    renderClassicStandings(MOCK_CLASSIC.standings.results);
+    document.getElementById('standings-table').innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">No standings found for this league.</div>`;
   }
 }
 
@@ -130,22 +104,18 @@ function renderClassicStandings(results) {
   `;
 }
 
-function renderH2HStandings(results) {
-  document.getElementById('standings-table').innerHTML = `
-    <table style="width:100%">
-      <thead><tr><th>#</th><th>Manager</th><th>W</th><th>D</th><th>L</th><th>Pts For</th></tr></thead>
-      <tbody>${results.map(r => `<tr><td>${r.rank}</td><td>${r.entry_name}</td><td>${r.matches_won}</td><td>${r.matches_drawn}</td><td>${r.matches_lost}</td><td><strong>${r.points_for}</strong></td></tr>`).join('')}</tbody>
-    </table>
-  `;
-}
-
 // --- TABS ---
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   event.target.classList.add('active');
-  if (tab === 'classic') fetchClassicStandings(CHAMPIONSHIP_CONFIG.leagueIds.classic);
-  if (tab === 'h2h') renderH2HStandings(MOCK_H2H.standings.results);
-  if (tab === 'cup') document.getElementById('standings-table').innerHTML = `<div style="text-align:center; padding:40px 20px; color:#94a3b8; font-weight:600;">Cup activates GW17</div>`;
+  
+  if (tab === 'classic') {
+    fetchClassicStandings(CHAMPIONSHIP_CONFIG.leagueIds.classic);
+  } else if (tab === 'h2h') {
+    document.getElementById('standings-table').innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">H2H Standings will appear here.</div>`;
+  } else if (tab === 'cup') {
+    document.getElementById('standings-table').innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">Cup bracket will appear here once the FPL Cup begins (usually GW17).</div>`;
+  }
 }
 
 // --- COUNTDOWN ---
@@ -166,9 +136,8 @@ function initWalletButton() {
   const fplInput = document.getElementById('fpl-id-input');
 
   btn.addEventListener('click', async () => {
-    // FIXED: Changed window.MeshSDK to window.BrowserWallet
     if (!window.BrowserWallet) { 
-      alert('MeshJS failed to load. Please refresh the page.'); 
+      alert('MeshJS is still loading. Please wait a few seconds and try again.'); 
       return; 
     }
     try {
@@ -180,7 +149,6 @@ function initWalletButton() {
       pill.textContent = `🟢 ${truncated}`;
       pill.style.display = 'block';
       
-      // Show the link card and enable input
       linkCard.style.display = 'block';
       fplInput.disabled = false;
       fplInput.placeholder = "Enter FPL Team ID...";
@@ -199,7 +167,8 @@ async function fetchManagerDossier(id) {
   if (profile && history) {
     renderDossier(profile, history);
   } else {
-    renderDossier(MOCK_MANAGER, MOCK_MANAGER.history);
+    document.getElementById('dossier-content').innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">Manager data unavailable. Check your FPL Team ID.</div>`;
+    document.getElementById('dossier-card').style.display = 'block';
   }
 }
 
