@@ -1,4 +1,4 @@
-// --- RICH MOCK DATA (Only used if API is completely down) ---
+// --- RICH MOCK DATA ---
 const MOCK_CLASSIC = { 
   standings: { results: [
     { rank: 1, entry_name: "Hosky Hotshots", player_name: "stake1...a1b2", total: 2187, event_total: 74 },
@@ -21,8 +21,8 @@ const MOCK_MANAGER = {
   history: { current: [ { event: 35, points: 58 }, { event: 36, points: 71 }, { event: 37, points: 63 }, { event: 38, points: 74 } ] }
 };
 
-// Use a CORS proxy to bypass FPL browser restrictions
-const PROXY = 'https://corsproxy.io/?url=';
+// Using api.allorigins.win which handles local file:// requests better
+const PROXY = 'https://api.allorigins.win/raw?url=';
 const BASE = 'https://fantasy.premierleague.net/api';
 let teamsMap = {};
 
@@ -162,22 +162,33 @@ function startCountdown(deadlineISO) {
 function initWalletButton() {
   const btn = document.getElementById('wallet-btn');
   const pill = document.getElementById('wallet-pill');
+  const linkCard = document.getElementById('link-card');
   const fplInput = document.getElementById('fpl-id-input');
 
   btn.addEventListener('click', async () => {
-    if (typeof window.MeshSDK === 'undefined') { alert('MeshJS failed to load. Ensure you are hosting this on a live URL (like Cloudflare), not opening it locally.'); return; }
+    if (typeof window.MeshSDK === 'undefined') { 
+      alert('MeshJS failed to load. Ensure you are hosting this on a live URL (like Cloudflare), not opening it locally.'); 
+      return; 
+    }
     try {
       const wallet = await window.MeshSDK.BrowserWallet.enable('eternl');
       const address = await wallet.getChangeAddress();
       const truncated = `${address.slice(0, 7)}...${address.slice(-4)}`;
+      
       btn.style.display = 'none';
       pill.textContent = `🟢 ${truncated}`;
       pill.style.display = 'block';
+      
+      // Show the link card and enable input
+      linkCard.style.display = 'block';
       fplInput.disabled = false;
       fplInput.placeholder = "Enter FPL Team ID...";
       document.querySelector('.input-note').textContent = "Wallet connected. Enter ID to load dossier.";
+      
       fplInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') fetchManagerDossier(fplInput.value); });
-    } catch (e) { alert('Wallet connection failed or rejected.'); }
+    } catch (e) { 
+      alert('Wallet connection failed or rejected.'); 
+    }
   });
 }
 
