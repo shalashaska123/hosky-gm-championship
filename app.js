@@ -1,21 +1,15 @@
+const PROXY = 'https://api.allorigins.win/raw?url=';
 const BASE = 'https://fantasy.premierleague.com/api';
 let teamsMap = {};
 
-// Smart fetch: Try direct first, fallback to proxy if blocked by CORS
 async function fetchAPI(endpoint) {
   try {
-    const res = await fetch(`${BASE}${endpoint}`);
-    if (!res.ok) throw new Error('Direct failed');
+    const res = await fetch(PROXY + encodeURIComponent(BASE + endpoint));
+    if (!res.ok) return null;
     return await res.json();
   } catch (e) {
-    try {
-      const proxyRes = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(BASE + endpoint)}`);
-      if (!proxyRes.ok) return null;
-      return await proxyRes.json();
-    } catch (err) {
-      console.error("API Fetch Failed completely:", err);
-      return null;
-    }
+    console.error("API Fetch Failed:", e);
+    return null;
   }
 }
 
@@ -142,13 +136,14 @@ function initWalletButton() {
   const fplInput = document.getElementById('fpl-id-input');
 
   btn.addEventListener('click', async () => {
-    // Reverted to Claude's exact global variable: window.MeshSDK
-    if (!window.MeshSDK || !window.MeshSDK.BrowserWallet) { 
+    // MeshJS exposes itself as 'window.mesh' when using mesh.browser.js
+    const mesh = window.mesh || window.MeshSDK;
+    if (!mesh || !mesh.BrowserWallet) { 
       alert('Wallet SDK is still loading. Please wait a few seconds and try again.'); 
       return; 
     }
     try {
-      const wallet = await window.MeshSDK.BrowserWallet.enable('eternl');
+      const wallet = await mesh.BrowserWallet.enable('eternl');
       const address = await wallet.getChangeAddress();
       const truncated = `${address.slice(0, 7)}...${address.slice(-4)}`;
       
