@@ -1,11 +1,9 @@
-// --- NO MORE MOCK DATA ---
-const PROXY = 'https://corsproxy.io/?url=';
 const BASE = 'https://fantasy.premierleague.com/api';
 let teamsMap = {};
 
 async function fetchAPI(endpoint) {
   try {
-    const res = await fetch(PROXY + encodeURIComponent(BASE + endpoint));
+    const res = await fetch(`${BASE}${endpoint}`);
     if (!res.ok) return null;
     return await res.json();
   } catch (e) {
@@ -23,11 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- CONFIG / PRIZES ---
 function initPrizes() {
-  document.getElementById('prize-pool').textContent = CHAMPIONSHIP_CONFIG.prizes.totalPool ? `${CHAMPIONSHIP_CONFIG.prizes.totalPool} ADA` : "TBD";
+  document.getElementById('prize-pool').textContent = CHAMPIONSHIP_CONFIG.prizes.totalPool ? `${CHAMPIONSHIP_CONFIG.prizes.totalPool} HOSKY` : "69B";
   const list = document.getElementById('prize-list');
   const p = CHAMPIONSHIP_CONFIG.prizes;
   list.innerHTML = `
-    <div class="prize-row"><span>Total Pool</span><strong>${p.totalPool ? `${p.totalPool} ADA` : "TBD"}</strong></div>
+    <div class="prize-row"><span>Total Pool</span><strong>${p.totalPool ? `${p.totalPool} HOSKY` : "69B"}</strong></div>
     <div class="prize-row"><span>Classic League</span><strong>${p.classicLeague ? `${p.classicLeague} ADA` : "TBD"}</strong></div>
     <div class="prize-row"><span>Head-to-Head</span><strong>${p.headToHead ? `${p.headToHead} ADA` : "TBD"}</strong></div>
     <div class="prize-row ${CHAMPIONSHIP_CONFIG.isCupActive ? '' : 'inactive'}"><span>Hosky Cup</span><strong>${CHAMPIONSHIP_CONFIG.isCupActive ? (p.hoskyCup || "TBD") : 'TBD (Inactive)'}</strong></div>
@@ -48,8 +46,8 @@ async function fetchBootstrap() {
     fetchFixtures(nextEvent.id);
     fetchClassicStandings(CHAMPIONSHIP_CONFIG.leagueIds.classic);
   } else {
-    document.getElementById('countdown').textContent = "Error";
-    document.getElementById('current-gw').textContent = "Error";
+    document.getElementById('countdown').textContent = "Unavailable";
+    document.getElementById('current-gw').textContent = "Unavailable";
     document.getElementById('fixtures-list').innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">Unable to fetch FPL data.</div>`;
   }
 }
@@ -136,12 +134,13 @@ function initWalletButton() {
   const fplInput = document.getElementById('fpl-id-input');
 
   btn.addEventListener('click', async () => {
-    if (!window.BrowserWallet) { 
-      alert('MeshJS is still loading. Please wait a few seconds and try again.'); 
+    // mesh is the global variable exposed by the standard UMD script tag
+    if (!window.mesh || !window.mesh.BrowserWallet) { 
+      alert('Wallet SDK is still loading. Please wait a few seconds and try again.'); 
       return; 
     }
     try {
-      const wallet = await window.BrowserWallet.enable('eternl');
+      const wallet = await window.mesh.BrowserWallet.enable('eternl');
       const address = await wallet.getChangeAddress();
       const truncated = `${address.slice(0, 7)}...${address.slice(-4)}`;
       
