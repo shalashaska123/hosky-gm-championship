@@ -1,14 +1,21 @@
 const BASE = 'https://fantasy.premierleague.com/api';
 let teamsMap = {};
 
+// Smart fetch: Try direct first, fallback to proxy if blocked by CORS
 async function fetchAPI(endpoint) {
   try {
     const res = await fetch(`${BASE}${endpoint}`);
-    if (!res.ok) return null;
+    if (!res.ok) throw new Error('Direct failed');
     return await res.json();
   } catch (e) {
-    console.error("API Fetch Failed:", e);
-    return null;
+    try {
+      const proxyRes = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(BASE + endpoint)}`);
+      if (!proxyRes.ok) return null;
+      return await proxyRes.json();
+    } catch (err) {
+      console.error("API Fetch Failed completely:", err);
+      return null;
+    }
   }
 }
 
@@ -21,11 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- CONFIG / PRIZES ---
 function initPrizes() {
-  document.getElementById('prize-pool').textContent = CHAMPIONSHIP_CONFIG.prizes.totalPool ? `${CHAMPIONSHIP_CONFIG.prizes.totalPool} HOSKY` : "69B";
+  document.getElementById('prize-pool').textContent = CHAMPIONSHIP_CONFIG.prizes.totalPool ? `${CHAMPIONSHIP_CONFIG.prizes.totalPool} ADA` : "TBD";
   const list = document.getElementById('prize-list');
   const p = CHAMPIONSHIP_CONFIG.prizes;
   list.innerHTML = `
-    <div class="prize-row"><span>Total Pool</span><strong>${p.totalPool ? `${p.totalPool} HOSKY` : "69B"}</strong></div>
+    <div class="prize-row"><span>Total Pool</span><strong>${p.totalPool ? `${p.totalPool} ADA` : "TBD"}</strong></div>
     <div class="prize-row"><span>Classic League</span><strong>${p.classicLeague ? `${p.classicLeague} ADA` : "TBD"}</strong></div>
     <div class="prize-row"><span>Head-to-Head</span><strong>${p.headToHead ? `${p.headToHead} ADA` : "TBD"}</strong></div>
     <div class="prize-row ${CHAMPIONSHIP_CONFIG.isCupActive ? '' : 'inactive'}"><span>Hosky Cup</span><strong>${CHAMPIONSHIP_CONFIG.isCupActive ? (p.hoskyCup || "TBD") : 'TBD (Inactive)'}</strong></div>
@@ -65,7 +72,7 @@ async function fetchFixtures(gw) {
     }));
     renderFixtures(formatted);
   } else {
-    document.getElementById('fixtures-list').innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">No fixtures available for this Gameweek yet.</div>`;
+    document.getElementById('fixtures-list').innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">Fixtures have not been released for this Gameweek yet.</div>`;
   }
 }
 
@@ -78,7 +85,7 @@ async function fetchClassicStandings(id) {
   if (data && data.standings && data.standings.results.length > 0) {
     renderClassicStandings(data.standings.results);
   } else {
-    document.getElementById('standings-table').innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">No standings found for this league.</div>`;
+    document.getElementById('standings-table').innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">No standings found. Check your League ID.</div>`;
   }
 }
 
@@ -95,6 +102,7 @@ function renderFixtures(fixtures) {
 
 function renderClassicStandings(results) {
   document.getElementById('standings-table').innerHTML = `
+    <h3 style="color:#1e72d7; font-weight:700; margin-bottom:15px; font-size:1rem;">Last Season's Final Standings</h3>
     <table style="width:100%">
       <thead><tr><th>#</th><th>Manager</th><th>Team Name</th><th>GW Pts</th><th>Total</th></tr></thead>
       <tbody>${results.map(r => `<tr><td>${r.rank}</td><td>${r.player_name}</td><td>${r.entry_name}</td><td>${r.event_total || 0}</td><td><strong>${r.total || 0}</strong></td></tr>`).join('')}</tbody>
@@ -134,13 +142,13 @@ function initWalletButton() {
   const fplInput = document.getElementById('fpl-id-input');
 
   btn.addEventListener('click', async () => {
-    // mesh is the global variable exposed by the standard UMD script tag
-    if (!window.mesh || !window.mesh.BrowserWallet) { 
+    // Reverted to Claude's exact global variable: window.MeshSDK
+    if (!window.MeshSDK || !window.MeshSDK.BrowserWallet) { 
       alert('Wallet SDK is still loading. Please wait a few seconds and try again.'); 
       return; 
     }
     try {
-      const wallet = await window.mesh.BrowserWallet.enable('eternl');
+      const wallet = await window.MeshSDK.BrowserWallet.enable('eternl');
       const address = await wallet.getChangeAddress();
       const truncated = `${address.slice(0, 7)}...${address.slice(-4)}`;
       
